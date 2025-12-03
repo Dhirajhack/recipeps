@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
  export default function Recipe()
  {
@@ -6,7 +6,9 @@ import { useState } from "react"
     const[recipename,setRecipeName]=useState("")
     const[Ingerdients,setIngredients]=useState("")
     const[Instructions,setInstructions]=useState("")
+    // const[food , setfood]=useState("")
     const[recipes,setRecipes]=useState([]);
+    const [editingId,setEditingId]=useState(null);
 
     // save recipes to localstorge
     const saveRecipes=(updateRecipes)=>{
@@ -15,6 +17,10 @@ import { useState } from "react"
     }
 
     // load recipes
+    useEffect(()=>{
+        const storedRecipes=JSON.parse(localStorage.getItem("recipes"))||[];
+        setRecipes(storedRecipes);
+    },[])
 
     // add recipes
     const handleSubmit=(e)=>{
@@ -23,20 +29,43 @@ import { useState } from "react"
         {
             alert("Please fill all field")
         }
+
+        if(editingId){
+            const updateRecipes=recipes.map((r)=>
+            r.id===editingId?{...r,name:recipename,Ingerdients,Instructions}:r)
+            saveRecipes(updateRecipes);
+            setEditingId(null);
+        }
         else
         {
             const newRecipe={
                 id:Date.now(),
                 name:recipename,
                 Ingerdients,
-                Instructions
+                Instructions,
+                // food,
             }
             saveRecipes([...recipes,newRecipe]);
         }
          setRecipeName("");
          setIngredients("");
          setInstructions("");
+        //  setfood("")
 
+    }
+
+    // delete  recipe
+    const handleDelete=(id)=>{
+        const updateRecipes=recipes.filter((r)=>r.id!==id)
+        saveRecipes(updateRecipes);
+    }
+
+    // edit recipe
+    const handleEdit=(r)=>{
+        setRecipeName(r.name);
+        setIngredients(r.Ingerdients);
+        setInstructions(r.Instructions);
+        setEditingId(r.id);
     }
 
     return(
@@ -57,13 +86,36 @@ import { useState } from "react"
 
              <div style={{marginBottom:"10px"}}>
                 <label htmlFor="">Instructions</label>
-                <input type="text" style={{width:"100%",padding:"5px"}}  value={setInstructions}  onChange={(e)=>setInstructions(e.target.value)} />
+                <input type="text" style={{width:"100%",padding:"5px"}}  value={Instructions}  onChange={(e)=>setInstructions(e.target.value)} />
              </div>
 
-             <button style={{padding:"5px 10px" , }} type="submit">ADD RECIPE</button>
+             {/* <div style={{marginBottom:"10px"}}>
+                <label htmlFor=""> Image of Food</label>
+                <input type="file"  style={{width:"100%",padding:"5px"}}  value={food}  onChange={(e)=>setfood(e.target.value)} />
+             </div> */}
+
+             <button style={{padding:"5px 10px" , }} type="submit">
+            
+                            { editingId?"update recipe":"Add recipe"}</button>
 
              </form>
 
+          </div>
+
+          <div style={{maxWidth:"600px",margin:"20px auto",border:"1px solid  #ccc" ,padding:"30px"}}>
+            <h3> All Recipe</h3>
+            {recipes.length===0 && <p> no Recpes added yet</p>}
+            {recipes.map((r)=>(
+                <div key={r.id} style={{border:"1px solid #ccc" , padding :"10px" , marginBottom:"10px"}}>
+                     <h4>Recipe name :{r.name}</h4>
+                     <p><strong> Ingredients</strong></p>
+                     <ul>{r.Ingerdients}</ul>
+                     <p><strong>Instructions{r.Instructions}</strong></p>
+                     {/* <p>food image {r.food}</p> */}
+                     <button style={{padding:"3px 8px"}} onClick={()=>handleEdit(r)}>Edit</button>
+                     <button style={{padding:"3px 8px"}} onClick={()=>handleDelete(r.id)}>delete</button>
+                      </div>
+            ))}
           </div>
     
          
